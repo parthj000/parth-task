@@ -1,8 +1,17 @@
-import { preloadImages } from './utils.js';
+const preloadImages = (selector = "img") => {
+  return new Promise((resolve) => {
+    // The imagesLoaded library is used to ensure all images (including backgrounds) are fully loaded.
+    imagesLoaded(
+      document.querySelectorAll(selector),
+      { background: true },
+      resolve
+    );
+  });
+};
 
 // Configuration object for animation settings
 const config = {
-  clipPathDirection: 'top-bottom', // Direction of clip-path animation ('top-bottom', 'bottom-top', 'left-right', 'right-left')
+  clipPathDirection: "top-bottom", // Direction of clip-path animation ('top-bottom', 'bottom-top', 'left-right', 'right-left')
   autoAdjustHorizontalClipPath: true, // Automatically flip horizontal clip-path direction based on panel side
   steps: 6, // Number of mover elements generated between grid item and panel
   stepDuration: 0.35, // Duration (in seconds) for each animation step
@@ -10,15 +19,15 @@ const config = {
   moverPauseBeforeExit: 0.14, // Pause before mover elements exit after entering
   rotationRange: 0, // Maximum random rotation applied to each mover's Z-axis (tilt left/right)
   wobbleStrength: 0, // Maximum random positional wobble (in pixels) applied horizontally/vertically to each mover path
-  panelRevealEase: 'sine.inOut', // Easing function for panel reveal animation
-  gridItemEase: 'sine', // Easing function for grid item exit animation
-  moverEnterEase: 'sine.in', // Easing function for mover entering animation
-  moverExitEase: 'sine', // Easing function for mover exit animation
+  panelRevealEase: "sine.inOut", // Easing function for panel reveal animation
+  gridItemEase: "sine", // Easing function for grid item exit animation
+  moverEnterEase: "sine.in", // Easing function for mover entering animation
+  moverExitEase: "sine", // Easing function for mover exit animation
   panelRevealDurationFactor: 2, // Multiplier to adjust panel reveal animation duration
   clickedItemDurationFactor: 2, // Multiplier to adjust clicked grid item animation duration
   gridItemStaggerFactor: 0.3, // Max delay factor when staggering grid item animations
   moverBlendMode: false, // Optional CSS blend mode for mover elements (false = no blend mode)
-  pathMotion: 'linear', // Type of path movement ('linear' or 'sine')
+  pathMotion: "linear", // Type of path movement ('linear' or 'sine')
   sineAmplitude: 50, // Amplitude of sine wave for pathMotion 'sine'
   sineFrequency: Math.PI, // Frequency of sine wave for pathMotion 'sine'
 };
@@ -31,10 +40,10 @@ const originalConfig = { ...config };
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // Cached DOM elements
-const grid = document.querySelector('.grid'); // Main grid container
-const frame = document.querySelectorAll(['.frame', '.heading']); // Frame overlays
-const panel = document.querySelector('.panel'); // Panel container
-const panelContent = panel.querySelector('.panel__content'); // Panel content
+const grid = document.querySelector(".grid"); // Main grid container
+const frame = document.querySelectorAll([".frame", ".heading"]); // Frame overlays
+const panel = document.querySelector(".panel"); // Panel container
+const panelContent = panel.querySelector(".panel__content"); // Panel content
 
 let isAnimating = false; // Prevents overlapping animations
 let isPanelOpen = false; // Tracks if the panel is currently open
@@ -43,21 +52,21 @@ let currentItem = null; // Reference to the clicked item
 // Initialize event listeners
 const init = () => {
   // Attach click handlers to all grid items
-  document.querySelectorAll('.grid__item').forEach((item) => {
-    item.addEventListener('click', () => onGridItemClick(item));
+  document.querySelectorAll(".grid__item").forEach((item) => {
+    item.addEventListener("click", () => onGridItemClick(item));
   });
 
   // Attach click handler to the panel close link
   panelContent
-    .querySelector('.panel__close')
-    ?.addEventListener('click', (e) => {
+    .querySelector(".panel__close")
+    ?.addEventListener("click", (e) => {
       e.preventDefault();
       resetView();
     });
 
   // Handle Escape key to close the panel
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isPanelOpen && !isAnimating) {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isPanelOpen && !isAnimating) {
       resetView();
     }
   });
@@ -120,8 +129,8 @@ const hideFrame = () => {
   gsap.to(frame, {
     opacity: 0,
     duration: 0.5,
-    ease: 'sine.inOut',
-    pointerEvents: 'none',
+    ease: "sine.inOut",
+    pointerEvents: "none",
   });
 };
 
@@ -130,8 +139,8 @@ const showFrame = () => {
   gsap.to(frame, {
     opacity: 1,
     duration: 0.5,
-    ease: 'sine.inOut',
-    pointerEvents: 'auto',
+    ease: "sine.inOut",
+    pointerEvents: "auto",
   });
 };
 
@@ -143,18 +152,18 @@ const positionPanelBasedOnClick = (clickedItem) => {
   const isLeftSide = centerX < windowHalf;
 
   if (isLeftSide) {
-    panel.classList.add('panel--right');
+    panel.classList.add("panel--right");
   } else {
-    panel.classList.remove('panel--right');
+    panel.classList.remove("panel--right");
   }
 
   // ✨ New logic to flip clipPathDirection if enabled
   if (config.autoAdjustHorizontalClipPath) {
     if (
-      config.clipPathDirection === 'left-right' ||
-      config.clipPathDirection === 'right-left'
+      config.clipPathDirection === "left-right" ||
+      config.clipPathDirection === "right-left"
     ) {
-      config.clipPathDirection = isLeftSide ? 'left-right' : 'right-left';
+      config.clipPathDirection = isLeftSide ? "left-right" : "right-left";
     }
   }
 };
@@ -162,30 +171,30 @@ const positionPanelBasedOnClick = (clickedItem) => {
 // Get appropriate clip-paths depending on animation direction
 const getClipPathsForDirection = (direction) => {
   switch (direction) {
-    case 'bottom-top':
+    case "bottom-top":
       return {
-        from: 'inset(0% 0% 100% 0%)',
-        reveal: 'inset(0% 0% 0% 0%)',
-        hide: 'inset(100% 0% 0% 0%)',
+        from: "inset(0% 0% 100% 0%)",
+        reveal: "inset(0% 0% 0% 0%)",
+        hide: "inset(100% 0% 0% 0%)",
       };
-    case 'left-right':
+    case "left-right":
       return {
-        from: 'inset(0% 100% 0% 0%)',
-        reveal: 'inset(0% 0% 0% 0%)',
-        hide: 'inset(0% 0% 0% 100%)',
+        from: "inset(0% 100% 0% 0%)",
+        reveal: "inset(0% 0% 0% 0%)",
+        hide: "inset(0% 0% 0% 100%)",
       };
-    case 'right-left':
+    case "right-left":
       return {
-        from: 'inset(0% 0% 0% 100%)',
-        reveal: 'inset(0% 0% 0% 0%)',
-        hide: 'inset(0% 100% 0% 0%)',
+        from: "inset(0% 0% 0% 100%)",
+        reveal: "inset(0% 0% 0% 0%)",
+        hide: "inset(0% 100% 0% 0%)",
       };
-    case 'top-bottom':
+    case "top-bottom":
     default:
       return {
-        from: 'inset(100% 0% 0% 0%)',
-        reveal: 'inset(0% 0% 0% 0%)',
-        hide: 'inset(0% 0% 100% 0%)',
+        from: "inset(100% 0% 0% 0%)",
+        reveal: "inset(0% 0% 0% 0%)",
+        hide: "inset(0% 0% 100% 0%)",
       };
   }
 };
@@ -206,32 +215,32 @@ const onGridItemClick = (item) => {
   const { imgURL, title, desc } = extractItemData(item);
   setPanelContent({ imgURL, title, desc });
 
-  const allItems = document.querySelectorAll('.grid__item');
+  const allItems = document.querySelectorAll(".grid__item");
   const delays = computeStaggerDelays(item, allItems);
   animateGridItems(allItems, item, delays);
   animateTransition(
-    item.querySelector('.grid__item-image'),
-    panel.querySelector('.panel__img'),
+    item.querySelector(".grid__item-image"),
+    panel.querySelector(".panel__img"),
     imgURL
   );
 };
 
 // Extract image URL and caption text from a grid item
 const extractItemData = (item) => {
-  const imgDiv = item.querySelector('.grid__item-image');
-  const caption = item.querySelector('figcaption');
+  const imgDiv = item.querySelector(".grid__item-image");
+  const caption = item.querySelector("figcaption");
   return {
     imgURL: imgDiv.style.backgroundImage,
-    title: caption.querySelector('h3').textContent,
-    desc: caption.querySelector('p').textContent,
+    title: caption.querySelector("h3").textContent,
+    desc: caption.querySelector("p").textContent,
   };
 };
 
 // Set the panel's background and text based on clicked item
 const setPanelContent = ({ imgURL, title, desc }) => {
-  panel.querySelector('.panel__img').style.backgroundImage = imgURL;
-  panel.querySelector('h3').textContent = title;
-  panel.querySelector('p').textContent = desc;
+  panel.querySelector(".panel__img").style.backgroundImage = imgURL;
+  panel.querySelector("h3").textContent = title;
+  panel.querySelector("p").textContent = desc;
 };
 
 // Calculate the center position of an element
@@ -263,7 +272,7 @@ const animateGridItems = (items, clickedItem, delays) => {
         ? config.stepDuration * config.clickedItemDurationFactor
         : 0.3,
     ease: config.gridItemEase,
-    clipPath: (i, el) => (el === clickedItem ? clipPaths.from : 'none'),
+    clipPath: (i, el) => (el === clickedItem ? clipPaths.from : "none"),
     delay: (i) => delays[i],
   });
 };
@@ -283,8 +292,8 @@ const animateTransition = (startEl, endEl, imgURL) => {
 
   // Create and animate movers
   path.forEach((step, index) => {
-    const mover = document.createElement('div');
-    mover.className = 'mover';
+    const mover = document.createElement("div");
+    mover.className = "mover";
     gsap.set(mover, createMoverStyle(step, index, imgURL));
     fragment.appendChild(mover);
 
@@ -316,7 +325,7 @@ const animateTransition = (startEl, endEl, imgURL) => {
   grid.parentNode.insertBefore(fragment, grid.nextSibling);
 
   // Schedule mover cleanup and panel reveal
-  scheduleCleanup(document.querySelectorAll('.mover'));
+  scheduleCleanup(document.querySelectorAll(".mover"));
   revealPanel(endEl);
 };
 
@@ -324,14 +333,14 @@ const animateTransition = (startEl, endEl, imgURL) => {
 const createMoverStyle = (step, index, imgURL) => {
   const style = {
     backgroundImage: imgURL,
-    position: 'fixed',
+    position: "fixed",
     left: step.left,
     top: step.top,
     width: step.width,
     height: step.height,
     clipPath: getClipPathsForDirection(config.clipPathDirection).from,
     zIndex: 1000 + index,
-    backgroundPosition: '50% 50%',
+    backgroundPosition: "50% 50%",
     rotationZ: gsap.utils.random(-config.rotationRange, config.rotationRange),
   };
   if (config.moverBlendMode) style.mixBlendMode = config.moverBlendMode;
@@ -352,7 +361,7 @@ const revealPanel = (endImg) => {
   const clipPaths = getClipPathsForDirection(config.clipPathDirection);
 
   gsap.set(panelContent, { opacity: 0 });
-  gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
+  gsap.set(panel, { opacity: 1, pointerEvents: "auto" });
 
   gsap
     .timeline({
@@ -366,7 +375,7 @@ const revealPanel = (endImg) => {
       { clipPath: clipPaths.hide },
       {
         clipPath: clipPaths.reveal,
-        pointerEvents: 'auto',
+        pointerEvents: "auto",
         delay: config.steps * config.stepInterval,
       }
     )
@@ -375,7 +384,7 @@ const revealPanel = (endImg) => {
       { y: 25 },
       {
         duration: 1,
-        ease: 'expo',
+        ease: "expo",
         opacity: 1,
         y: 0,
         delay: config.steps * config.stepInterval,
@@ -384,7 +393,7 @@ const revealPanel = (endImg) => {
           isPanelOpen = true;
         },
       },
-      '<-=.2'
+      "<-=.2"
     );
 };
 
@@ -410,7 +419,7 @@ const generateMotionPath = (startRect, endRect, steps) => {
 
     // Apply top offset (for sine motion)
     const sineOffset =
-      config.pathMotion === 'sine'
+      config.pathMotion === "sine"
         ? Math.sin(t * config.sineFrequency) * config.sineAmplitude
         : 0;
 
@@ -434,25 +443,25 @@ const resetView = () => {
   if (isAnimating) return;
   isAnimating = true;
 
-  const allItems = document.querySelectorAll('.grid__item');
+  const allItems = document.querySelectorAll(".grid__item");
   const delays = computeStaggerDelays(currentItem, allItems);
 
   gsap
     .timeline({
-      defaults: { duration: config.stepDuration, ease: 'expo' },
+      defaults: { duration: config.stepDuration, ease: "expo" },
       onComplete: () => {
-        panel.classList.remove('panel--right');
+        panel.classList.remove("panel--right");
         isAnimating = false;
         isPanelOpen = false;
       },
     })
     .to(panel, { opacity: 0 })
     .add(showFrame, 0)
-    .set(panel, { opacity: 0, pointerEvents: 'none' })
-    .set(panel.querySelector('.panel__img'), {
-      clipPath: 'inset(0% 0% 100% 0%)',
+    .set(panel, { opacity: 0, pointerEvents: "none" })
+    .set(panel.querySelector(".panel__img"), {
+      clipPath: "inset(0% 0% 100% 0%)",
     })
-    .set(allItems, { clipPath: 'none', opacity: 0, scale: 0.8 }, 0)
+    .set(allItems, { clipPath: "none", opacity: 0, scale: 0.8 }, 0)
     .to(
       allItems,
       {
@@ -460,14 +469,14 @@ const resetView = () => {
         scale: 1,
         delay: (i) => delays[i],
       },
-      '>'
+      ">"
     );
 
   Object.assign(config, originalConfig);
 };
 
 // Preload images then initialize everything
-preloadImages('.grid__item-image, .panel__img').then(() => {
-  document.body.classList.remove('loading');
+preloadImages(".grid__item-image, .panel__img").then(() => {
+  document.body.classList.remove("loading");
   init();
 });
